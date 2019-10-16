@@ -37,26 +37,14 @@ spec:
     spec:
       securityContext:
        runAsUser: 802
-      initContainers:
-        - name: init-download-capps
-          image: "{{ .Values.cappDownload.initImage.repository }}:{{ .Values.cappDownload.initImage.tag }}"
-          command:
-            - /bin/sh
-            - "-c"
-            - |
-              set -e
-              wget -P /capps {{ required "A valid Values.cappDownload.urls entry required!" .Values.cappDownload.urls }}
-          volumeMounts:
-            - name: capp-download
-              mountPath: /capps
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.wso2.deployments.microIntegrator.repository }}:{{ .Values.wso2.deployments.microIntegrator.tag }}"
+          imagePullPolicy: {{ .Values.wso2.deployments.microIntegrator.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -79,9 +67,3 @@ spec:
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - name: capp-download
-              mountPath: /home/wso2carbon/wso2mi/repository/deployment/server/carbonapps
-      volumes:
-        - name: capp-download
-          emptyDir: {}

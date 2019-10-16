@@ -14,16 +14,12 @@
 
 replicaCount: 1
 
-image:
-  repository: "wso2/micro-integrator"
-  tag: "1.1.0"
-  pullPolicy: IfNotPresent
-
-cappDownload:
-  initImage:
-    repository: "busybox"
-    tag: "1.31"
-  urls: "https://github.com/ThilinaManamgoda/tmp-car/raw/new/hello-world-capp_1.0.0.car"
+wso2:
+  deployments:
+    microIntegrator:
+      repository: ""
+      tag: ""
+      pullPolicy: IfNotPresent
 
 #imagePullSecrets: []
 nameOverride: ""
