@@ -39,13 +39,13 @@ spec:
        runAsUser: 802
       initContainers:
         - name: init-download-capps
-          image: "{{ .Values.cappDownload.initImage.repository }}:{{ .Values.cappDownload.initImage.tag }}"
+          image: "{{ .Values.images.initContainer.image }}:{{ .Values.images.initContainer.imageTag }}"
           command:
             - /bin/sh
             - "-c"
             - |
               set -e
-              wget -P /capps {{ required "A valid Values.cappDownload.urls entry required!" .Values.cappDownload.urls }}
+              wget -P /capps {{ .Values.cappDownload.urls }}
           volumeMounts:
             - name: capp-download
               mountPath: /capps
@@ -55,8 +55,8 @@ spec:
     {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.images.microIntegrator.image }}:{{ .Values.images.microIntegrator.imageTag }}"
+          imagePullPolicy: {{ .Values.images.microIntegrator.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

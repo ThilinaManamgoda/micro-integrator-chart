@@ -14,16 +14,17 @@
 
 replicaCount: 1
 
-image:
-  repository: "wso2/micro-integrator"
-  tag: "1.1.0"
-  pullPolicy: IfNotPresent
+images:
+  microIntegrator:
+    image: "wso2/micro-integrator"
+    imageTag: "1.1.0"
+    pullPolicy: IfNotPresent
+  initContainer:
+    image: "busybox"
+    imageTag: "1.31"
 
 cappDownload:
-  initImage:
-    repository: "busybox"
-    tag: "1.31"
-  urls: "https://github.com/ThilinaManamgoda/tmp-car/raw/new/hello-world-capp_1.0.0.car"
+  urls: ""
 
 #imagePullSecrets: []
 nameOverride: ""
@@ -49,14 +50,16 @@ service:
   port: 8290
 
 ingress:
+  # enable an ingress to expose. If enabled, must set the service type to "ClusterIP".
+  enabled: true
   annotations: {}
-  host: "micro-integrator.local"
+  host: "{{ .Release.Name }}.example.com"
 #  secret: ""
 
 resources:
   limits:
-    cpu: 4000m
-    memory: 4Gi
+    cpu: 2000m
+    memory: 2Gi
   requests:
     cpu: 1000m
-    memory: 2Gi
+    memory: 1Gi

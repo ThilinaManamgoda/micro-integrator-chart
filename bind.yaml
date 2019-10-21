@@ -14,6 +14,6 @@
 
 template: |
   {
-    hostname: $.services[0].status.loadBalancer.ingress[0].ip,
-    name: $.services[0].name
+    hostname:  $.services[0].metadata.labels["nginx.ingress.hostname"],
+    instance: $.services[0].metadata.labels["app.kubernetes.io/instance"]
   }
