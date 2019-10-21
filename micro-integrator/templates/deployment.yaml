@@ -43,7 +43,7 @@ spec:
     {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.wso2.deployments.microIntegrator.repository }}:{{ .Values.wso2.deployments.microIntegrator.tag }}"
+          image: "{{ .Values.wso2.deployments.microIntegrator.imageName }}:{{ .Values.wso2.deployments.microIntegrator.imageTag }}"
           imagePullPolicy: {{ .Values.wso2.deployments.microIntegrator.pullPolicy }}
           ports:
             - name: http
