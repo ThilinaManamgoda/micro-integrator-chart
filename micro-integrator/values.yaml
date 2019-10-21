@@ -17,6 +17,7 @@ replicaCount: 1
 wso2:
   deployments:
     microIntegrator:
+      dockerRegistry: ""
       imageName: ""
       imageTag: ""
       pullPolicy: IfNotPresent
