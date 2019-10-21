@@ -16,7 +16,7 @@ replicaCount: 1
 
 
 wso2:
-  deployments:
+  deployment:
     microIntegrator:
       dockerRegistry: ""
       imageName: ""

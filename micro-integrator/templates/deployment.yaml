@@ -43,16 +43,16 @@ spec:
     {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          {{ if .Values.wso2.deployments.microIntegrator.dockerRegistry }}
-          image: {{ .Values.wso2.deployments.microIntegrator.dockerRegistry }}/{{ .Values.wso2.deployments.microIntegrator.imageName }}
-          {{- $tag := .Values.wso2.deployments.microIntegrator.imageTag }}
+          {{ if .Values.wso2.deployment.microIntegrator.dockerRegistry }}
+          image: {{ .Values.wso2.deployment.microIntegrator.dockerRegistry }}/{{ .Values.wso2.deployment.microIntegrator.imageName }}
+          {{- $tag := .Values.wso2.deployment.microIntegrator.imageTag }}
           {{- if not (eq $tag "") }}{{- printf ":%s" $tag -}}{{- end }}
           {{ else if or (eq .Values.wso2.subscription.username "") (eq .Values.wso2.subscription.password "") }}
-          image: wso2/{{ .Values.wso2.deployments.microIntegrator.imageName }}:{{ .Values.wso2.deployments.microIntegrator.imageTag }}
+          image: wso2/{{ .Values.wso2.deployment.microIntegrator.imageName }}:{{ .Values.wso2.deployment.microIntegrator.imageTag }}
           {{ else }}
-          image: docker.wso2.com/{{ .Values.wso2.deployments.microIntegrator.imageName }}:{{ .Values.wso2.deployments.microIntegrator.imageTag }}
+          image: docker.wso2.com/{{ .Values.wso2.deployment.microIntegrator.imageName }}:{{ .Values.wso2.deployment.microIntegrator.imageTag }}
            {{ end }}
-          imagePullPolicy: {{ .Values.wso2.deployments.microIntegrator.pullPolicy }}
+          imagePullPolicy: {{ .Values.wso2.deployment.microIntegrator.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
