@@ -41,6 +41,36 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      initContainers:
+        {{ if .Values.wso2.monitoring.enabled }}
+        - name: init-jmx-exporter
+          image: busybox:1.31
+          command:
+            - /bin/sh
+            - "-c"
+            - |
+              set -e
+              wget https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.12.0/jmx_prometheus_javaagent-0.12.0.jar -P /jmx-jar/
+          volumeMounts:
+            - name: shared-prometheus-jmx-jar
+              mountPath: /jmx-jar
+        {{ end }}
+        {{ if .Values.wso2.centralizedLogging.enabled }}
+        - name: init-logstash-plugins-install
+          image: docker.elastic.co/logstash/logstash:{{ .Values.wso2.centralizedLogging.logstash.imageTag }}
+          command:
+            - /bin/bash
+            - "-c"
+            - |
+              set -e
+              ./bin/logstash-plugin install logstash-codec-multiline logstash-filter-grok
+          volumeMounts:
+            - name: shared-plugins
+              mountPath: /usr/share/logstash/plugins/
+        - name: init-elasticsearch
+          image: busybox:1.31
+          command: ['sh', '-c', 'echo -e "Checking for the availability of Elasticsearch Server deployment"; while ! nc -z {{ .Values.wso2.centralizedLogging.logstash.elasticsearch.host }} 9200; do sleep 1; printf "-"; done; echo -e "  >> Elasticsearch server has started";']
+        {{ end }}
       containers:
         - name: {{ .Chart.Name }}
           {{ if .Values.wso2.deployment.microIntegrator.dockerRegistry }}
@@ -53,10 +83,19 @@ spec:
           image: docker.wso2.com/{{ .Values.wso2.deployment.microIntegrator.imageName }}:{{ .Values.wso2.deployment.microIntegrator.imageTag }}
            {{ end }}
           imagePullPolicy: {{ .Values.wso2.deployment.microIntegrator.pullPolicy }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "cp -r /home/wso2carbon/wso2-config-volume/* /home/wso2carbon/wso2mi/ && /home/wso2carbon/wso2mi/bin/micro-integrator.sh"
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+            {{ if .Values.wso2.monitoring.enabled }}
+            - containerPort: 2222
+              protocol: TCP
+              name: metrics
+            {{ end }}
           livenessProbe:
             exec:
               command:
@@ -75,3 +114,75 @@ spec:
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+        {{ if .Values.wso2.monitoring.enabled }}
+          - name: shared-prometheus-jmx-jar
+            mountPath: /home/wso2carbon/prometheus
+          - name: micro-integrator-prometheus-exporter-conf
+            mountPath: /home/wso2carbon/prometheus/config.yaml
+            subPath: config.yaml
+          - name: micro-integrator-bin
+            mountPath: /home/wso2carbon/wso2-config-volume/bin
+        {{ end }}
+        {{ if .Values.wso2.centralizedLogging.enabled }}
+          - name: shared-logs
+            mountPath: /home/wso2carbon/wso2is-5.8.0/repository/logs/
+        - name: wso2is-logstash
+          image: docker.elastic.co/logstash/logstash:{{ .Values.wso2.centralizedLogging.logstash.imageTag }}
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /usr/share/logstash/wso2-logs/
+            - name: logstash-yml
+              mountPath: /usr/share/logstash/config/logstash.yml
+              subPath: logstash.yml
+            - name: logstash-conf
+              mountPath: /usr/share/logstash/pipeline/logstash.conf
+              subPath: logstash.conf
+            - name: shared-plugins
+              mountPath: /usr/share/logstash/plugins/
+          env:
+            - name: NODE_ID
+              value: {{ .Release.Name }}-is-node
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: ELASTICSEARCH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: logstash-elasticsearch-creds
+                  key: username
+            - name: ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: logstash-elasticsearch-creds
+                  key: password
+            - name: ELASTICSEARCH_HOST
+              value: {{ default "wso2-elasticsearch-master" .Values.wso2.centralizedLogging.logstash.elasticsearch.host }}
+        {{ end }}
+      volumes:
+        {{ if .Values.wso2.centralizedLogging.enabled }}
+        - name: shared-logs
+          emptyDir: {}
+        - name: logstash-yml
+          configMap:
+            name: logstash-yml
+        - name: logstash-conf
+          configMap:
+            name: logstash-conf
+        - name: shared-plugins
+          emptyDir: {}
+        - name: logstash-elasticsearch-creds
+          secret:
+            secretName: logstash-elasticsearch-creds
+        {{ end }}
+        {{ if .Values.wso2.monitoring.enabled }}
+        - name: shared-prometheus-jmx-jar
+          emptyDir: {}
+        - name: micro-integrator-prometheus-exporter-conf
+          configMap:
+            name: micro-integrator-prometheus-exporter-conf
+        - name: micro-integrator-bin
+          configMap:
+            name: micro-integrator-bin
+        {{ end }}
