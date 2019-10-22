@@ -15,6 +15,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "micro-integrator.fullname" . }}
+  namespace : {{ .Release.Namespace }}
   labels:
 {{ include "micro-integrator.labels" . | indent 4 }}
 spec:
@@ -158,7 +159,7 @@ spec:
                   name: logstash-elasticsearch-creds
                   key: password
             - name: ELASTICSEARCH_HOST
-              value: {{ default "wso2-elasticsearch-master" .Values.wso2.centralizedLogging.logstash.elasticsearch.host }}
+              value: {{ .Values.wso2.centralizedLogging.logstash.elasticsearch.host }}
         {{ end }}
       volumes:
         {{ if .Values.wso2.centralizedLogging.enabled }}

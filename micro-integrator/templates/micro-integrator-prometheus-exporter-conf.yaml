@@ -11,3 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+{{ if .Values.wso2.monitoring.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: micro-integrator-prometheus-exporter-conf
+    namespace : {{ .Release.Namespace }}
+data:
+    config.yaml: |
+        startDelaySeconds: 0
+        jmxurl: service:jmx:rmi://localhost:11111/jndi/rmi://localhost:9999/jmxrmi
+        ssl: false
+        rules:
+            - pattern: ".*"
+{{ end }}

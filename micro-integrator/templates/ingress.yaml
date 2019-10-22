@@ -18,6 +18,7 @@ kind: Ingress
 metadata:
 {{ $fullName := include "micro-integrator.fullname" . }}
   name: {{ $fullName }}
+  namespace : {{ .Release.Namespace }}
   labels:
 {{ include "micro-integrator.labels" . | indent 4 }}
   annotations:
