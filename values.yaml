@@ -23,7 +23,7 @@ images:
     image: "busybox"
     imageTag: "1.31"
 
-cappDownload:
+capp:
   urls: ""
 
 #imagePullSecrets: []
@@ -63,3 +63,5 @@ resources:
   requests:
     cpu: 1000m
     memory: 1Gi
+
+deploymentTomlURL: ""

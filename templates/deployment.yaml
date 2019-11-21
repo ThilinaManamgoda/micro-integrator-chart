@@ -45,10 +45,21 @@ spec:
             - "-c"
             - |
               set -e
-              wget -P /capps {{ .Values.cappDownload.urls }}
+              wget -P /capps {{ .Values.capp.urls }}
           volumeMounts:
             - name: capp-download
               mountPath: /capps
+        - name: init-download-deployment-toml
+          image: "{{ .Values.images.initContainer.image }}:{{ .Values.images.initContainer.imageTag }}"
+          command:
+              - /bin/sh
+              - "-c"
+              - |
+                  set -e
+                  wget -P /conf {{ .Values.deploymentTomlURL }}
+          volumeMounts:
+              - name: deployment-toml-download
+                mountPath: /conf
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -57,6 +68,13 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.images.microIntegrator.image }}:{{ .Values.images.microIntegrator.imageTag }}"
           imagePullPolicy: {{ .Values.images.microIntegrator.pullPolicy }}
+          command:
+            - /bin/sh
+            - "-c"
+            - |
+                set -e
+                cp /home/wso2carbon/conf/deployment.toml /home/wso2carbon/wso2mi/conf/
+                /home/wso2carbon/wso2mi/bin/micro-integrator.sh
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -82,6 +100,10 @@ spec:
           volumeMounts:
             - name: capp-download
               mountPath: /home/wso2carbon/wso2mi/repository/deployment/server/carbonapps
+            - name: deployment-toml-download
+              mountPath: /home/wso2carbon/conf
       volumes:
         - name: capp-download
+          emptyDir: {}
+        - name: deployment-toml-download
           emptyDir: {}
