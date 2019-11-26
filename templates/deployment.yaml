@@ -37,7 +37,9 @@ spec:
     spec:
       securityContext:
        runAsUser: 802
+    {{- if or (not (eq .Values.capp.urls "")) (not (eq .Values.deploymentTomlURL ""))}}
       initContainers:
+      {{- if not (eq .Values.capp.urls "") }}
         - name: init-download-capps
           image: "{{ .Values.images.initContainer.image }}:{{ .Values.images.initContainer.imageTag }}"
           command:
@@ -49,6 +51,8 @@ spec:
           volumeMounts:
             - name: capp-download
               mountPath: /capps
+      {{- end }}
+      {{- if not (eq .Values.deploymentTomlURL "") }}
         - name: init-download-deployment-toml
           image: "{{ .Values.images.initContainer.image }}:{{ .Values.images.initContainer.imageTag }}"
           command:
@@ -60,6 +64,8 @@ spec:
           volumeMounts:
               - name: deployment-toml-download
                 mountPath: /conf
+      {{- end }}
+    {{- end }}
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -68,6 +74,7 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.images.microIntegrator.image }}:{{ .Values.images.microIntegrator.imageTag }}"
           imagePullPolicy: {{ .Values.images.microIntegrator.pullPolicy }}
+        {{- if not (eq .Values.deploymentTomlURL "") }}
           command:
             - /bin/sh
             - "-c"
@@ -75,6 +82,7 @@ spec:
                 set -e
                 cp /home/wso2carbon/conf/deployment.toml /home/wso2carbon/wso2mi/conf/
                 /home/wso2carbon/wso2mi/bin/micro-integrator.sh
+        {{- end}}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -97,13 +105,23 @@ spec:
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      {{- if or (not (eq .Values.capp.urls "")) (not (eq .Values.deploymentTomlURL ""))}}
           volumeMounts:
+          {{- if not (eq .Values.capp.urls "") }}
             - name: capp-download
               mountPath: /home/wso2carbon/wso2mi/repository/deployment/server/carbonapps
+          {{- end }}
+          {{- if not (eq .Values.deploymentTomlURL "") }}
             - name: deployment-toml-download
               mountPath: /home/wso2carbon/conf
+          {{- end }}
       volumes:
+      {{- if not (eq .Values.capp.urls "") }}
         - name: capp-download
           emptyDir: {}
+      {{- end}}
+      {{- if not (eq .Values.deploymentTomlURL "") }}
         - name: deployment-toml-download
           emptyDir: {}
+      {{- end }}
+    {{- end }}

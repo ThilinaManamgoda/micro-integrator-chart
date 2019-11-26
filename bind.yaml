@@ -15,5 +15,6 @@
 template: |
   {
     hostname:  $.services[0].metadata.labels["nginx.ingress.hostname"],
-    instance: $.services[0].metadata.labels["app.kubernetes.io/instance"]
+    releaseName: $.services[0].metadata.labels["app.kubernetes.io/instance"],
+    namespace: $.services[0].metadata.namespace
   }
